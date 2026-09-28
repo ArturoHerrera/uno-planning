@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  body.theme-dark {
+    background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.18), transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(237, 28, 36, 0.14), transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(84, 185, 72, 0.08), transparent 50%),
+                #090d16;
+    color: #f8fafc;
+  }
+
+  body.theme-light {
+    background: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.10), transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(237, 28, 36, 0.08), transparent 45%),
+                #f1f5f9;
+    color: #0f172a;
+  }
+}
+
+/* Botón pop oficial de UNO */
+.btn-uno-reveal {
+  background: #ED1C24;
+  color: #FFDE00;
+  border: 4px solid #ffffff;
+  box-shadow: 0 8px 0 #991b1b, 0 12px 20px rgba(0, 0, 0, 0.4);
+  transform: rotate(-3deg);
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+
+.btn-uno-reveal:hover {
+  transform: rotate(0deg) scale(1.06);
+  box-shadow: 0 10px 0 #991b1b, 0 16px 25px rgba(237, 28, 36, 0.4);
+}
+
+.btn-uno-reveal:active {
+  transform: translateY(6px) rotate(-1deg);
+  box-shadow: 0 2px 0 #991b1b, 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.btn-uno-reveal:disabled {
+  opacity: 0.38;
+  filter: grayscale(0.85);
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 4px 0 #475569, 0 6px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Mesa de Póker / Casino con Paño Físico */
+.poker-table-outer {
+  position: relative;
+  border-radius: 48px;
+  transition: all 0.3s ease;
+}
+
+body.theme-dark .poker-table-outer {
+  background: radial-gradient(ellipse at 50% 50%, rgba(6, 78, 59, 0.22) 0%, rgba(15, 23, 42, 0.88) 65%, rgba(2, 6, 23, 0.98) 100%);
+  border: 10px solid #0f172a;
+  box-shadow: 
+    inset 0 0 50px rgba(0, 0, 0, 0.9),
+    inset 0 0 15px rgba(16, 185, 129, 0.12),
+    0 20px 45px -10px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+body.theme-light .poker-table-outer {
+  background: radial-gradient(ellipse at 50% 50%, rgba(209, 250, 229, 0.75) 0%, rgba(241, 245, 249, 0.9) 70%, rgba(226, 232, 240, 0.95) 100%);
+  border: 10px solid #cbd5e1;
+  box-shadow: 
+    inset 0 0 30px rgba(0, 0, 0, 0.06),
+    0 15px 35px -5px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.poker-table-center-felt {
+  position: relative;
+  border-radius: 28px;
+  transition: all 0.3s ease;
+}
+
+body.theme-dark .poker-table-center-felt {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+body.theme-light .poker-table-center-felt {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+/* 3D Flip Card Effect */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Custom scrollbar para la lista de tareas */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Animaciones de reacciones y splat de emojis */
+@keyframes reactionSplat {
+  0% {
+    transform: scale(0.2) rotate(-20deg);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.4) rotate(15deg);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1) rotate(-5deg);
+    opacity: 1;
+  }
+  85% {
+    transform: scale(1.1) translateY(-10px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(0.8) translateY(-30px);
+    opacity: 0;
+  }
+}
+
+@keyframes cardWobble {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-8deg) scale(1.05); }
+  40% { transform: rotate(8deg) scale(1.05); }
+  60% { transform: rotate(-4deg); }
+  80% { transform: rotate(4deg); }
+}
+
+.animate-reaction-splat {
+  animation: reactionSplat 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.wobble-card {
+  animation: cardWobble 0.6s ease-in-out;
+}
+
+/* Animaciones balísticas de proyectiles de emojis */
+@keyframes projectileFlight {
+  0% {
+    transform: translate3d(var(--start-x), var(--start-y), 0) scale(0.5) rotate(0deg);
+    opacity: 0.9;
+  }
+  75% {
+    transform: translate3d(var(--end-x), var(--end-y), 0) scale(1.2) rotate(var(--rot-mid));
+    opacity: 1;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+  }
+  88% {
+    transform: translate3d(var(--end-x), var(--end-y), 0) scale(1.6) rotate(var(--rot-end));
+    opacity: 1;
+    filter: drop-shadow(0 12px 20px rgba(237, 28, 36, 0.5));
+  }
+  100% {
+    transform: translate3d(var(--end-x), var(--end-y), 0) scale(0.2) rotate(var(--rot-end));
+    opacity: 0;
+  }
+}
+
+.animate-projectile {
+  animation-name: projectileFlight;
+  animation-timing-function: cubic-bezier(0.25, 0.9, 0.35, 1);
+  animation-fill-mode: forwards;
+}
+
