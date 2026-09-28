@@ -11,18 +11,16 @@ export const ResultsModal = ({
   onSaveScore,
   onResetRound
 }) => {
-  if (!isOpen || !roomState?.revealed) return null;
-
   const metrics = roomState?.metrics;
   const currentTask = roomState?.tasks?.[roomState?.currentTaskIndex];
   const taskTitle = typeof currentTask === 'object' ? currentTask.title : currentTask;
 
   // Por defecto sugerir la moda o el promedio redondeado con fallback seguro
-  const getSuggestion = () => {
+  const getSuggestion = React.useCallback(() => {
     if (metrics && metrics.mode != null) return metrics.mode;
     if (metrics && metrics.average != null) return Math.round(metrics.average);
     return 5;
-  };
+  }, [metrics]);
 
   const [selectedScore, setSelectedScore] = useState(getSuggestion);
 
@@ -30,7 +28,9 @@ export const ResultsModal = ({
     if (isOpen) {
       setSelectedScore(getSuggestion());
     }
-  }, [isOpen, metrics]);
+  }, [isOpen, getSuggestion]);
+
+  if (!isOpen || !roomState?.revealed) return null;
 
   const handleSaveAndAdvance = () => {
     onSaveScore(selectedScore, true);

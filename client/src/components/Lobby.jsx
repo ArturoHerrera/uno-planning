@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UnoCard } from './UnoCard';
-import { Sparkles, ArrowRight, PlusCircle, LogIn, Dices, X } from 'lucide-react';
+import { ArrowRight, PlusCircle, Dices, X } from 'lucide-react';
 import { getAvatarUrl, getRandomAvatar } from '../utils/avatar';
 
 export const Lobby = ({
