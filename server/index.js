@@ -373,7 +373,7 @@ io.on('connection', (socket) => {
     const targetParticipant = room.participants.get(targetUserId);
 
     if (fromParticipant && targetParticipant) {
-      const allowedEmojis = ['🍅', '🔥', '🚀', '🎯', '☕', '🃏', '👏', '😂'];
+      const allowedEmojis = ['🍅', '🔥', '🚀', '🎯', '🃏', '👏', '⏰', '☕'];
       const safeEmoji = allowedEmojis.includes(emoji) ? emoji : '🍅';
 
       io.to(currentRoomId).emit('reaction:received', {

@@ -43,10 +43,22 @@ export const RoundTimer = ({
 
       setTimeLeft(remaining);
 
-      // Sonido tic suave en los últimos 5 segundos (de 5 a 1)
-      if (remaining > 0 && remaining <= 5 && remaining !== lastTickSecondRef.current) {
+      // Sonido de tic continuo cada segundo con rampa de volumen en el último 25%
+      if (remaining > 0 && remaining !== lastTickSecondRef.current) {
         lastTickSecondRef.current = remaining;
-        playSoftTick();
+
+        const total = timer.duration || selectedDuration || 60;
+        const ratio = remaining / total;
+
+        // Si está en el 25% final, escalar intensidad de 0.25 a 1.0; en el 75% inicial se mantiene en 0.25 sutil
+        let intensity = 0.25;
+        if (ratio <= 0.25) {
+          // ratio va de 0.25 -> 0, por lo que progressInFinal va de 0.0 -> 1.0
+          const progressInFinal = 1 - (ratio / 0.25);
+          intensity = 0.25 + (0.75 * progressInFinal);
+        }
+
+        playSoftTick(intensity);
       }
 
       // Chime relajante zen al llegar a cero
@@ -57,7 +69,7 @@ export const RoundTimer = ({
     }, 250);
 
     return () => clearInterval(interval);
-  }, [timer]);
+  }, [timer, selectedDuration]);
 
   const handleToggleMute = () => {
     const next = !muted;

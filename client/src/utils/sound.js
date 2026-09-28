@@ -35,8 +35,9 @@ export function setSoundMuted(muted) {
 
 /**
  * Tic-tac sutil estilo bloque de madera suave / gota de agua
+ * @param {number} intensity - Nivel de intensidad (de 0.2 a 1.0)
  */
-export function playSoftTick() {
+export function playSoftTick(intensity = 0.25) {
   if (isSoundMuted()) return;
   const ctx = getAudioContext();
   if (!ctx) return;
@@ -46,20 +47,27 @@ export function playSoftTick() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    // Frecuencia cálida de percusión de madera
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, now);
-    osc.frequency.exponentialRampToValueAtTime(220, now + 0.04);
+    // Rango de volumen muy sutil y amigable: de 0.012 en modo base hasta 0.045 al final
+    const clampedIntensity = Math.min(1.0, Math.max(0.1, intensity));
+    const targetVolume = 0.012 + (0.033 * clampedIntensity);
 
-    // Envolvente rápida y volumen tenue
-    gain.gain.setValueAtTime(0.04, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+    // Frecuencia sutil de madera que sube ligeramente cuando hay más intensidad
+    const baseFreq = 380 + (80 * clampedIntensity);
+    const dropFreq = baseFreq / 2;
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(dropFreq, now + 0.035);
+
+    // Envolvente rápida y percusiva
+    gain.gain.setValueAtTime(targetVolume, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
 
     osc.start(now);
-    osc.stop(now + 0.05);
+    osc.stop(now + 0.04);
   } catch (err) {
     // Manejo silencioso si el navegador bloquea audio sin interacción previa
   }
