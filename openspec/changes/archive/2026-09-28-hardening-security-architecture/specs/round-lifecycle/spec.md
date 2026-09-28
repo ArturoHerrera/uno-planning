@@ -1,21 +1,6 @@
-# Spec: Round Lifecycle
+# Spec Delta: Round Lifecycle
 
-## Purpose
-
-Controla el ciclo de vida de la ronda de votación, incluyendo el estado oculto, la revelación simultánea con animación flip 3D, el cálculo de métricas de consenso y el reinicio de la mesa.
-
-## Requirements
-
-### Requirement: Revelación de votos y animación 3D
-El sistema SHALL permitir al anfitrión revelar los votos emitidos mediante un botón de estilo lúdico oficial de UNO (óvalo inclinado, rojo, tipografía amarilla con contorno y efecto 3D) situado en el centro de la mesa de paño, el cual SHALL estar habilitado únicamente cuando al menos un participante haya emitido su voto y permanecer deshabilitado con retroalimentación visual si no se han registrado votos, desplegando un modal de cierre de estimación para todos los participantes al activarse.
-
-#### Scenario: Anfitrión presiona botón de revelar
-- **WHEN** al menos un participante ha emitido su voto y el anfitrión activa la acción de revelar cartas
-- **THEN** todas las cartas sobre la mesa ejecutan la animación de volteo (flip 3D), mostrando el anverso con su color y valor asignado y se despliega el modal de resultados para todos los participantes
-
-#### Scenario: Botón de revelar deshabilitado cuando no hay votos
-- **WHEN** ningún participante ha emitido voto en la ronda activa
-- **THEN** el botón de revelar votos permanece en estado deshabilitado (con estilo atenuado, sin efecto hover ni respuesta a clics) mostrando una indicación de que se requiere al menos un voto para revelar
+## MODIFIED Requirements
 
 ### Requirement: Cálculo de promedio y consenso
 El sistema SHALL computar automáticamente la media aritmética, la moda y el grado de acuerdo una vez que las cartas han sido reveladas, validando estrictamente que los votos emitidos provengan de la baraja oficial de UNO Planning (`[0, 1, 2, 3, 5, 8, 13, 20, 40, 100, '?', '☕']`) y descartando valores inválidos o corruptos (`NaN`, `Infinity`, números negativos o cadenas arbitrarias) para evitar envenenamiento de métricas.
@@ -48,12 +33,7 @@ El sistema SHALL computar automáticamente la media aritmética, la moda y el gr
 - **WHEN** el anfitrión elige "Votar de Nuevo" tras debatir la tarea
 - **THEN** la mesa se restablece en blanco para la misma tarea permitiendo una nueva ronda de estimación
 
-### Requirement: Reinicio de ronda
-El sistema SHALL permitir limpiar los votos y volver al estado inicial de votación sin alterar la lista de participantes.
-
-#### Scenario: Inicio de nueva estimación
-- **WHEN** el anfitrión selecciona la acción de reiniciar ronda
-- **THEN** todas las cartas de los participantes se restablecen a estado no votado y la mesa queda lista para una nueva ronda
+## ADDED Requirements
 
 ### Requirement: Cuotas y validación de listas de tareas
 El sistema SHALL aplicar cuotas de tamaño al importar o configurar tareas, limitando la lista a un máximo de 50 tareas y cada título o URL a un máximo de 300 caracteres para evitar saturación de memoria y ataques de carga excesiva (Task Bomb).

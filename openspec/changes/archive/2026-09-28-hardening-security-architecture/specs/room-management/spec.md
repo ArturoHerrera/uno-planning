@@ -1,10 +1,6 @@
-# Spec: Room Management
+# Spec Delta: Room Management
 
-## Purpose
-
-Proporciona la gestión del ciclo de vida de salas efímeras de votación en memoria, asignación de roles y sincronización de presencia en tiempo real sin almacenamiento persistente.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Creación y unión a salas
 El sistema SHALL permitir a cualquier usuario crear una nueva sala con un identificador único generado mediante entropía criptográfica segura garantizando la ausencia de colisiones o sobrescrituras destructivas en memoria, o unirse a una sala existente mediante dicho código o enlace directo, reconociendo y extrayendo automáticamente el código si el usuario pega una URL completa, limitando la capacidad de la sala a un máximo de 30 participantes simultáneos para prevenir ataques de denegación de servicio.
@@ -52,19 +48,7 @@ El sistema SHALL recordar el nombre y avatar asignado al usuario localmente en e
 - **WHEN** el anfitrión de una sala recarga el navegador o experimenta un parpadeo de red que renueva su conexión de Socket.IO
 - **THEN** el sistema valida el token de anfitrión presentado y restaura automáticamente sus privilegios de administración sin delegar la sala a otro participante
 
-### Requirement: Navegación al inicio desde cabecera
-El sistema SHALL permitir al usuario salir de la sala activa y regresar al Lobby principal al interactuar con el logo o título `UNO-PLANNING` en la cabecera superior.
-
-#### Scenario: Clic en el logo de cabecera
-- **WHEN** un participante o anfitrión hace clic en el logo `UNO-PLANNING` dentro de una sala
-- **THEN** el sistema desconecta al usuario de la sala activa, limpia el parámetro de consulta `?room` de la URL y presenta la vista de Lobby para unirse o crear otra sala
-
-### Requirement: Destrucción efímera de salas
-El sistema SHALL mantener el estado de las salas exclusivamente en memoria volátil del servidor y destruirlas cuando queden desiertas.
-
-#### Scenario: Desconexión del último participante
-- **WHEN** el último participante abandona o cierra la sesión de una sala
-- **THEN** el servidor libera de la memoria el estado completo de dicha sala
+## ADDED Requirements
 
 ### Requirement: Reconexión resiliente y auto-rejoin de clientes
 El sistema SHALL detectar la reconexión exitosa del transporte de Socket.IO en el cliente y solicitar automáticamente la reincorporación a la sala activa sin requerir intervención manual del usuario.
