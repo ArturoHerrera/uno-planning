@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UnoCard } from './UnoCard';
-import { Sparkles, ArrowRight, PlusCircle, LogIn, Dices } from 'lucide-react';
+import { Sparkles, ArrowRight, PlusCircle, LogIn, Dices, X } from 'lucide-react';
 import { getAvatarUrl, getRandomAvatar } from '../utils/avatar';
 
 export const Lobby = ({
@@ -147,14 +147,39 @@ export const Lobby = ({
                 <span>Cambiar estilo</span>
               </button>
             </div>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ej. José Arrieta"
-              maxLength={30}
-              className="w-full px-4 py-3 bg-slate-800/90 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all font-medium text-sm"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (e.target.value.trim()) {
+                    localStorage.setItem('poker_username', e.target.value);
+                  }
+                }}
+                placeholder="Ej. José Arrieta"
+                maxLength={30}
+                className="w-full pl-4 pr-10 py-3 bg-slate-800/90 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all font-medium text-sm"
+              />
+              {name && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setName('');
+                    localStorage.removeItem('poker_username');
+                  }}
+                  title="Borrar nombre guardado"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-md transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            {name && (
+              <div className="text-[10px] text-slate-500 mt-1 flex items-center justify-between px-1">
+                <span>Recordado en este navegador</span>
+              </div>
+            )}
           </div>
         </div>
 

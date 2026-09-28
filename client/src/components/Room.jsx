@@ -4,6 +4,7 @@ import { FlipCard } from './FlipCard';
 import { TaskModal } from './TaskModal';
 import { ResultsModal } from './ResultsModal';
 import { ProjectilesOverlay } from './ProjectilesOverlay';
+import { RoundTimer } from './RoundTimer';
 import { generateRandomDeck } from '../utils/deck';
 import { getAvatarUrl } from '../utils/avatar';
 import {
@@ -39,7 +40,10 @@ export const Room = ({
   onSelectTask,
   onNextTask,
   onPrevTask,
-  onLeaveRoom
+  onLeaveRoom,
+  onStartTimer,
+  onPauseTimer,
+  onResetTimer
 }) => {
   const [deck, setDeck] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -90,13 +94,17 @@ export const Room = ({
       {/* 1. Header Superior */}
       <header className="px-6 py-4 flex items-center justify-between z-20">
         <div className="flex items-center gap-3">
-          <div className="flex items-center font-black text-2xl tracking-tighter">
-            <span className="text-red-500">U</span>
-            <span className="text-blue-500">N</span>
-            <span className="text-emerald-500">O</span>
+          <button
+            onClick={onLeaveRoom}
+            title="Ir al inicio / Crear nueva sala"
+            className="flex items-center font-black text-2xl tracking-tighter hover:opacity-85 active:scale-95 transition-all cursor-pointer group"
+          >
+            <span className="text-red-500 group-hover:scale-105 transition-transform">U</span>
+            <span className="text-blue-500 group-hover:scale-105 transition-transform">N</span>
+            <span className="text-emerald-500 group-hover:scale-105 transition-transform">O</span>
             <span className={`${isDark ? 'text-slate-400' : 'text-slate-500'} font-light mx-0.5`}>-</span>
             <span className="text-amber-400 italic">PLANNING</span>
-          </div>
+          </button>
 
           {/* Código de Sala */}
           <div className={`flex items-center gap-2 ${isDark ? 'bg-white/[0.05] hover:bg-white/[0.08]' : 'bg-slate-200/80 hover:bg-slate-200'} transition-colors px-3.5 py-1.5 rounded-full text-xs font-medium backdrop-blur-md shadow-sm`}>
@@ -110,6 +118,18 @@ export const Room = ({
               {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
+        </div>
+
+        {/* 2. Temporizador Central Sincronizado */}
+        <div className="flex-1 max-w-fit mx-2 hidden md:block">
+          <RoundTimer
+            timer={roomState?.timer}
+            isHost={isHost}
+            theme={theme}
+            onStartTimer={onStartTimer}
+            onPauseTimer={onPauseTimer}
+            onResetTimer={onResetTimer}
+          />
         </div>
 
         {/* Perfil, Tema & Salir */}
@@ -171,6 +191,18 @@ export const Room = ({
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   Participantes ({roomState?.participants?.length || 0})
                 </span>
+              </div>
+
+              {/* Temporizador para pantallas pequeñas */}
+              <div className="block md:hidden">
+                <RoundTimer
+                  timer={roomState?.timer}
+                  isHost={isHost}
+                  theme={theme}
+                  onStartTimer={onStartTimer}
+                  onPauseTimer={onPauseTimer}
+                  onResetTimer={onResetTimer}
+                />
               </div>
 
               {/* Indicador de votos emitidos en vivo */}

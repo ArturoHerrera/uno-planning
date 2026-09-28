@@ -90,7 +90,8 @@ function getRoomPublicState(roomId) {
     currentTaskIndex: room.currentTaskIndex,
     revealed: room.revealed,
     participants: participantsList,
-    metrics
+    metrics,
+    timer: room.timer || { duration: 60, endsAt: null, isRunning: false, remainingSeconds: 60 }
   };
 }
 
@@ -110,6 +111,12 @@ io.on('connection', (socket) => {
       tasks: [],
       currentTaskIndex: 0,
       revealed: false,
+      timer: {
+        duration: 60,
+        endsAt: null,
+        isRunning: false,
+        remainingSeconds: 60
+      },
       participants: new Map([
         [socket.id, {
           id: socket.id,
@@ -211,6 +218,71 @@ io.on('connection', (socket) => {
     room.participants.forEach(p => {
       p.vote = null;
     });
+
+    // Reiniciar timer para la nueva ronda
+    if (room.timer) {
+      room.timer.endsAt = null;
+      room.timer.isRunning = false;
+      room.timer.remainingSeconds = room.timer.duration || 60;
+    }
+
+    io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
+  });
+
+  // Temporizador de ronda (Solo anfitrión)
+  socket.on('timer:start', ({ duration } = {}) => {
+    if (!currentRoomId) return;
+    const room = rooms.get(currentRoomId);
+    if (!room || room.hostId !== socket.id) return;
+
+    if (!room.timer) {
+      room.timer = { duration: 60, endsAt: null, isRunning: false, remainingSeconds: 60 };
+    }
+
+    const validDurations = [20, 40, 60, 80];
+    const newDuration = validDurations.includes(Number(duration))
+      ? Number(duration)
+      : (room.timer.duration || 60);
+
+    room.timer.duration = newDuration;
+    const secondsToCount = room.timer.remainingSeconds > 0 && room.timer.remainingSeconds <= newDuration && !room.timer.endsAt
+      ? room.timer.remainingSeconds
+      : newDuration;
+
+    room.timer.endsAt = Date.now() + secondsToCount * 1000;
+    room.timer.isRunning = true;
+    room.timer.remainingSeconds = secondsToCount;
+
+    io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
+  });
+
+  socket.on('timer:pause', () => {
+    if (!currentRoomId) return;
+    const room = rooms.get(currentRoomId);
+    if (!room || room.hostId !== socket.id || !room.timer || !room.timer.isRunning) return;
+
+    const remaining = Math.max(0, Math.ceil((room.timer.endsAt - Date.now()) / 1000));
+    room.timer.isRunning = false;
+    room.timer.endsAt = null;
+    room.timer.remainingSeconds = remaining;
+
+    io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
+  });
+
+  socket.on('timer:reset', ({ duration } = {}) => {
+    if (!currentRoomId) return;
+    const room = rooms.get(currentRoomId);
+    if (!room || room.hostId !== socket.id || !room.timer) return;
+
+    const validDurations = [20, 40, 60, 80];
+    if (validDurations.includes(Number(duration))) {
+      room.timer.duration = Number(duration);
+    }
+
+    room.timer.isRunning = false;
+    room.timer.endsAt = null;
+    room.timer.remainingSeconds = room.timer.duration;
+
     io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
   });
 

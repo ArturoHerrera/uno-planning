@@ -161,6 +161,19 @@ export function App() {
     window.location.reload();
   };
 
+  // 10. Temporizador de ronda
+  const handleStartTimer = (duration) => {
+    socket.emit('timer:start', { duration });
+  };
+
+  const handlePauseTimer = () => {
+    socket.emit('timer:pause');
+  };
+
+  const handleResetTimer = (duration) => {
+    socket.emit('timer:reset', { duration });
+  };
+
   if (!roomState) {
     return (
       <Lobby
@@ -190,6 +203,9 @@ export function App() {
       onNextTask={handleNextTask}
       onPrevTask={handlePrevTask}
       onLeaveRoom={handleLeaveRoom}
+      onStartTimer={handleStartTimer}
+      onPauseTimer={handlePauseTimer}
+      onResetTimer={handleResetTimer}
     />
   );
 }
