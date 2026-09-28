@@ -22,11 +22,15 @@ El sistema SHALL permitir exclusivamente al anfitrión de la sala configurar, in
 - **THEN** observa el avance sincronizado del reloj y la barra de progreso, pero los controles de configuración permanecen deshabilitados u ocultos
 
 ### Requirement: Comportamiento no intrusivo al expirar tiempo
-El sistema SHALL finalizar la cuenta regresiva indicando visualmente que el tiempo terminó sin forzar la revelación automática de los votos ni penalizar a quienes no hayan emitido su carta.
+El sistema SHALL finalizar automáticamente la votación al llegar la cuenta regresiva a 00:00 de forma autoritativa en el servidor, revelando las cartas de todos los participantes y abriendo el modal interactivo de resultados inmediatamente como si se hubiese accionado la revelación manual, deteniendo cualquier temporizador activo cuando se realice una revelación manual anticipada.
 
 #### Scenario: Expiración del temporizador
-- **WHEN** la cuenta regresiva llega a 00:00
-- **THEN** el temporizador muestra el estado de tiempo agotado, manteniendo las cartas en su estado actual para que el anfitrión decida cuándo revelar o reiniciar la ronda
+- **WHEN** la cuenta regresiva del temporizador llega a 00:00 sin haber sido detenida previamente
+- **THEN** el servidor establece la ronda como revelada, detiene el temporizador y despliega automáticamente el modal de resultados con las métricas para todos los miembros de la sala, emitiendo el chime sonoro de finalización
+
+#### Scenario: Revelación manual anticipada con temporizador activo
+- **WHEN** el anfitrión activa la acción de revelar votos antes de que la cuenta regresiva llegue a 00:00
+- **THEN** el sistema cancela el temporizador activo en servidor y clientes, revelando las cartas y abriendo el modal de resultados sin esperar a que el tiempo expire
 
 ### Requirement: Paisaje sonoro zen y control de silencio
 El sistema SHALL reproducir un tic suave y sutil cada segundo durante toda la cuenta regresiva, incrementando suavemente su intensidad durante el último 25% del tiempo total de la ronda y concluyendo con un chime tranquilo al expirar el tiempo, permitiendo a cada usuario silenciar el audio localmente.
