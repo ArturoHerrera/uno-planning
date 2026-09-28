@@ -6,6 +6,7 @@ export const RoundTimer = ({
   timer,
   isHost,
   theme,
+  isRevealed,
   onStartTimer,
   onPauseTimer,
   onResetTimer
@@ -28,12 +29,18 @@ export const RoundTimer = ({
   useEffect(() => {
     if (!timer) return;
 
-    if (!timer.isRunning) {
+    if (!timer.isRunning || isRevealed) {
       const remaining = timer.remainingSeconds !== undefined ? timer.remainingSeconds : (timer.duration || 60);
       setTimeLeft(remaining);
-      chimePlayedRef.current = remaining === 0;
+      // Disparar chime si expiró el tiempo
+      if (remaining === 0 && !chimePlayedRef.current) {
+        chimePlayedRef.current = true;
+        playZenChime();
+      }
       return;
     }
+
+    chimePlayedRef.current = false;
 
     const interval = setInterval(() => {
       if (!timer.endsAt) return;
@@ -69,7 +76,7 @@ export const RoundTimer = ({
     }, 250);
 
     return () => clearInterval(interval);
-  }, [timer, selectedDuration]);
+  }, [timer, selectedDuration, isRevealed]);
 
   const handleToggleMute = () => {
     const next = !muted;

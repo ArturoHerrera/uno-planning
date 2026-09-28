@@ -158,6 +158,33 @@ async function runE2ETest() {
   }
   console.log('✓ Anonimato estricto verificado: ninguna reacción contiene fromUserId ni fromName.');
 
+  // 10. Temporizador autoritativo y auto-revelación al expirar el tiempo
+  hostSocket.emit('round:reset');
+  await new Promise((r) => setTimeout(r, 100));
+
+  const autoRevealPromise = new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Timeout: El temporizador no reveló automáticamente las cartas')), 3000);
+    voterSocket.on('room:updated', (state) => {
+      if (state.revealed && state.timer && !state.timer.isRunning) {
+        clearTimeout(timeout);
+        resolve(state);
+      }
+    });
+  });
+
+  // Iniciar temporizador de 1 segundo
+  hostSocket.emit('timer:start', { duration: 1 });
+  const autoRevealedState = await autoRevealPromise;
+  console.log('✓ Auto-revelación por temporizador exitosa:', {
+    revealed: autoRevealedState.revealed,
+    timerRunning: autoRevealedState.timer.isRunning,
+    remainingSeconds: autoRevealedState.timer.remainingSeconds
+  });
+
+  if (!autoRevealedState.revealed || autoRevealedState.timer.isRunning) {
+    throw new Error('Fallo en la auto-revelación obligatoria al expirar el temporizador');
+  }
+
   // Desconectar clientes
   hostSocket.disconnect();
   voterSocket.disconnect();

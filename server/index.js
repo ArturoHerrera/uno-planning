@@ -95,6 +95,16 @@ function getRoomPublicState(roomId) {
   };
 }
 
+/**
+ * Helper para limpiar y cancelar el temporizador en memoria de una sala
+ */
+function clearRoomTimer(room) {
+  if (room && room.timerTimeout) {
+    clearTimeout(room.timerTimeout);
+    room.timerTimeout = null;
+  }
+}
+
 io.on('connection', (socket) => {
   let currentRoomId = null;
   let currentUserId = socket.id;
@@ -204,6 +214,11 @@ io.on('connection', (socket) => {
     const room = rooms.get(currentRoomId);
     if (!room || room.hostId !== socket.id) return;
 
+    clearRoomTimer(room);
+    if (room.timer) {
+      room.timer.isRunning = false;
+      room.timer.endsAt = null;
+    }
     room.revealed = true;
     io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
   });
@@ -214,6 +229,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(currentRoomId);
     if (!room || room.hostId !== socket.id) return;
 
+    clearRoomTimer(room);
     room.revealed = false;
     room.participants.forEach(p => {
       p.vote = null;
@@ -239,7 +255,7 @@ io.on('connection', (socket) => {
       room.timer = { duration: 60, endsAt: null, isRunning: false, remainingSeconds: 60 };
     }
 
-    const validDurations = [20, 40, 60, 80];
+    const validDurations = [1, 2, 20, 40, 60, 80];
     const newDuration = validDurations.includes(Number(duration))
       ? Number(duration)
       : (room.timer.duration || 60);
@@ -253,6 +269,19 @@ io.on('connection', (socket) => {
     room.timer.isRunning = true;
     room.timer.remainingSeconds = secondsToCount;
 
+    clearRoomTimer(room);
+    room.timerTimeout = setTimeout(() => {
+      const activeRoom = rooms.get(currentRoomId);
+      if (activeRoom && activeRoom.timer && activeRoom.timer.isRunning) {
+        activeRoom.revealed = true;
+        activeRoom.timer.isRunning = false;
+        activeRoom.timer.endsAt = null;
+        activeRoom.timer.remainingSeconds = 0;
+        clearRoomTimer(activeRoom);
+        io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
+      }
+    }, secondsToCount * 1000);
+
     io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
   });
 
@@ -261,6 +290,7 @@ io.on('connection', (socket) => {
     const room = rooms.get(currentRoomId);
     if (!room || room.hostId !== socket.id || !room.timer || !room.timer.isRunning) return;
 
+    clearRoomTimer(room);
     const remaining = Math.max(0, Math.ceil((room.timer.endsAt - Date.now()) / 1000));
     room.timer.isRunning = false;
     room.timer.endsAt = null;
@@ -274,7 +304,8 @@ io.on('connection', (socket) => {
     const room = rooms.get(currentRoomId);
     if (!room || room.hostId !== socket.id || !room.timer) return;
 
-    const validDurations = [20, 40, 60, 80];
+    clearRoomTimer(room);
+    const validDurations = [1, 2, 20, 40, 60, 80];
     if (validDurations.includes(Number(duration))) {
       room.timer.duration = Number(duration);
     }
@@ -301,6 +332,12 @@ io.on('connection', (socket) => {
     room.currentTaskIndex = 0;
     room.revealed = false;
     room.participants.forEach(p => { p.vote = null; });
+    clearRoomTimer(room);
+    if (room.timer) {
+      room.timer.endsAt = null;
+      room.timer.isRunning = false;
+      room.timer.remainingSeconds = room.timer.duration || 60;
+    }
 
     io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
   });
@@ -321,6 +358,12 @@ io.on('connection', (socket) => {
 
     room.revealed = false;
     room.participants.forEach(p => { p.vote = null; });
+    clearRoomTimer(room);
+    if (room.timer) {
+      room.timer.endsAt = null;
+      room.timer.isRunning = false;
+      room.timer.remainingSeconds = room.timer.duration || 60;
+    }
     io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
   });
 
@@ -333,6 +376,12 @@ io.on('connection', (socket) => {
       room.currentTaskIndex = index;
       room.revealed = false;
       room.participants.forEach(p => { p.vote = null; });
+      clearRoomTimer(room);
+      if (room.timer) {
+        room.timer.endsAt = null;
+        room.timer.isRunning = false;
+        room.timer.remainingSeconds = room.timer.duration || 60;
+      }
       io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
     }
   });
@@ -346,6 +395,12 @@ io.on('connection', (socket) => {
       room.currentTaskIndex += 1;
       room.revealed = false;
       room.participants.forEach(p => { p.vote = null; });
+      clearRoomTimer(room);
+      if (room.timer) {
+        room.timer.endsAt = null;
+        room.timer.isRunning = false;
+        room.timer.remainingSeconds = room.timer.duration || 60;
+      }
       io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
     }
   });
@@ -359,6 +414,12 @@ io.on('connection', (socket) => {
       room.currentTaskIndex -= 1;
       room.revealed = false;
       room.participants.forEach(p => { p.vote = null; });
+      clearRoomTimer(room);
+      if (room.timer) {
+        room.timer.endsAt = null;
+        room.timer.isRunning = false;
+        room.timer.remainingSeconds = room.timer.duration || 60;
+      }
       io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
     }
   });
@@ -395,6 +456,7 @@ io.on('connection', (socket) => {
 
     // Si la sala se vacía, se elimina de RAM
     if (room.participants.size === 0) {
+      clearRoomTimer(room);
       rooms.delete(currentRoomId);
       return;
     }
