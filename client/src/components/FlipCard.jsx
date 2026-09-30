@@ -31,7 +31,7 @@ export const FlipCard = ({
   activeReaction = null
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
-  const allowedEmojis = ['🍅', '🔥', '🚀', '🎯', '🃏', '👏', '⏰', '☕'];
+  const allowedEmojis = ['☕', '🍅', '🔥', '🔪', '🧱', '💩', '💀', '👾', '⏰'];
 
   return (
     <div
