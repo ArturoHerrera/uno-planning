@@ -171,31 +171,40 @@ body.theme-light .poker-table-center-felt {
   animation: cardWobble 0.6s ease-in-out;
 }
 
-/* Animaciones balísticas de proyectiles de emojis */
+/* Animaciones balísticas de proyectiles de emojis (tiro parabólico) */
 @keyframes projectileFlight {
   0% {
-    transform: translate3d(var(--start-x), var(--start-y), 0) scale(0.5) rotate(0deg);
+    transform: translate3d(var(--start-x), var(--start-y), 0) scale(0.4) rotate(var(--rot-start, 0deg));
+    opacity: 0.95;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  }
+  48% {
+    /* Ápice del arco parabólico: máxima elevación, cerca del observador */
+    transform: translate3d(var(--mid-x), var(--mid-y), 0) scale(1.35) rotate(var(--rot-mid));
+    opacity: 1;
+    filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.45));
+  }
+  82% {
+    /* Impacto y contacto en la tarjeta objetivo */
+    transform: translate3d(var(--end-x), var(--end-y), 0) scale(1.0) rotate(var(--rot-end));
+    opacity: 1;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+  }
+  90% {
+    /* Squash & stretch / Rebote cómico del impacto */
+    transform: translate3d(var(--end-x), var(--end-y), 0) scale(1.22) rotate(var(--rot-end));
     opacity: 0.9;
   }
-  75% {
-    transform: translate3d(var(--end-x), var(--end-y), 0) scale(1.2) rotate(var(--rot-mid));
-    opacity: 1;
-    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
-  }
-  88% {
-    transform: translate3d(var(--end-x), var(--end-y), 0) scale(1.6) rotate(var(--rot-end));
-    opacity: 1;
-    filter: drop-shadow(0 12px 20px rgba(237, 28, 36, 0.5));
-  }
   100% {
-    transform: translate3d(var(--end-x), var(--end-y), 0) scale(0.2) rotate(var(--rot-end));
+    /* Disolución y salida */
+    transform: translate3d(var(--end-x), var(--end-y), 0) scale(0.25) rotate(var(--rot-end));
     opacity: 0;
   }
 }
 
 .animate-projectile {
   animation-name: projectileFlight;
-  animation-timing-function: cubic-bezier(0.25, 0.9, 0.35, 1);
+  animation-timing-function: cubic-bezier(0.22, 0.65, 0.35, 1);
   animation-fill-mode: forwards;
 }
 

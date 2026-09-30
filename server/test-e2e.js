@@ -140,7 +140,7 @@ async function runE2ETest() {
     });
   });
 
-  const emojis = ['🍅', '🔥', '🚀', '🎯', '😂'];
+  const emojis = ['☕', '🍅', '🔥', '🔪', '👾'];
   for (const emoji of emojis) {
     hostSocket.emit('reaction:throw', { targetUserId: voterSocket.id, emoji });
   }

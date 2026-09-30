@@ -29,7 +29,7 @@ export const ProjectilesOverlay = () => {
       const edge = Math.floor(Math.random() * 4);
       let startX = 0;
       let startY = 0;
-      const margin = 80;
+      const margin = 70;
 
       if (edge === 0) {
         // Arriba
@@ -49,17 +49,41 @@ export const ProjectilesOverlay = () => {
         startY = Math.random() * window.innerHeight;
       }
 
-      const duration = 480 + Math.floor(Math.random() * 120); // 480ms a 600ms
-      const rotMid = `${Math.floor((Math.random() - 0.5) * 540)}deg`;
-      const rotEnd = `${Math.floor((Math.random() - 0.5) * 900)}deg`;
+      // Jitter sutil en el impacto para ráfagas orgánicas sobre la tarjeta
+      const jitterX = (Math.random() - 0.5) * 24;
+      const jitterY = (Math.random() - 0.5) * 24;
+      const targetX = endX + jitterX;
+      const targetY = endY + jitterY;
+
+      // Cálculo de física balística: arco parabólico con elevación en el punto medio
+      const dx = targetX - startX;
+      const dy = targetY - startY;
+      const dist = Math.hypot(dx, dy);
+
+      const midX = (startX + targetX) / 2;
+      const baseArc = Math.min(260, Math.max(130, dist * 0.28));
+      const jitterArc = (Math.random() - 0.5) * 40;
+      const arcHeight = baseArc + jitterArc;
+      const midY = Math.max(15, Math.min(startY, targetY) - arcHeight);
+
+      // Sentido de rotación según la dirección horizontal de vuelo
+      const dir = dx >= 0 ? 1 : -1;
+      const rotStart = `${Math.floor((Math.random() - 0.5) * 40)}deg`;
+      const rotMid = `${dir * (140 + Math.floor(Math.random() * 160))}deg`;
+      const rotEnd = `${dir * (360 + Math.floor(Math.random() * 360))}deg`;
+
+      const duration = 720 + Math.floor(Math.random() * 160); // 720ms a 880ms para trayectoria balística fluida
 
       const newProjectile = {
         id: id || Math.random().toString(36).substring(2, 9),
         emoji,
         startX,
         startY,
-        endX,
-        endY,
+        midX,
+        midY,
+        endX: targetX,
+        endY: targetY,
+        rotStart,
         rotMid,
         rotEnd,
         duration
@@ -108,8 +132,11 @@ export const ProjectilesOverlay = () => {
           style={{
             '--start-x': `${p.startX}px`,
             '--start-y': `${p.startY}px`,
+            '--mid-x': `${p.midX}px`,
+            '--mid-y': `${p.midY}px`,
             '--end-x': `${p.endX}px`,
             '--end-y': `${p.endY}px`,
+            '--rot-start': p.rotStart,
             '--rot-mid': p.rotMid,
             '--rot-end': p.rotEnd,
             animationDuration: `${p.duration}ms`
