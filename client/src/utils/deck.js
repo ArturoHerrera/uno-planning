@@ -1,18 +1,20 @@
-import { COLOR_KEYS } from '../components/UnoCard';
+// Escala de Fibonacci para UNO-PLANNING (topado en 13) + comodines (9 cartas)
+export const FIBONACCI_VALUES = [0, 1, 2, 3, 5, 8, 13, '?', '☕'];
 
-// Escala de Fibonacci para UNO-PLANNING (topado en 34) + comodines
-export const FIBONACCI_VALUES = [0, 1, 2, 3, 5, 8, 13, 21, 34, '?', '☕'];
+// Patrón secuencial oficial de colores UNO: Azul -> Verde -> Amarillo -> Rojo
+export const DECK_COLOR_CYCLE = ['blue', 'green', 'yellow', 'red'];
 
 /**
- * Genera una baraja con colores aleatorios entre los 4 colores de UNO
- * Los comodines tienen asignaciones especiales
+ * Genera la baraja con el patrón secuencial cíclico de colores UNO
+ * Los comodines tienen asignación 'wild'
  */
 export function generateRandomDeck() {
+  let colorIndex = 0;
   return FIBONACCI_VALUES.map(val => {
     let color = 'wild';
     if (val !== '?' && val !== '☕') {
-      const randomIndex = Math.floor(Math.random() * COLOR_KEYS.length);
-      color = COLOR_KEYS[randomIndex];
+      color = DECK_COLOR_CYCLE[colorIndex % DECK_COLOR_CYCLE.length];
+      colorIndex++;
     }
     return {
       value: val,
@@ -20,3 +22,4 @@ export function generateRandomDeck() {
     };
   });
 }
+

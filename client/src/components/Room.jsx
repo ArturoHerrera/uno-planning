@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UnoCard } from './UnoCard';
 import { FlipCard } from './FlipCard';
 import { TaskModal } from './TaskModal';
@@ -49,10 +49,21 @@ export const Room = ({
   const [selectedCard, setSelectedCard] = useState(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const activeTaskRef = useRef(null);
 
   useEffect(() => {
     setDeck(generateRandomDeck());
   }, []);
+
+  // Auto-scroll reactivo para mantener siempre enfocada la tarea activa sin scroll manual
+  useEffect(() => {
+    if (activeTaskRef.current) {
+      activeTaskRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, [roomState?.currentTaskIndex]);
 
   const me = roomState?.participants?.find(p => p.id === currentUserId);
   const isHost = me?.isHost || false;
@@ -417,6 +428,7 @@ export const Room = ({
                   return (
                     <div
                       key={index}
+                      ref={isActive ? activeTaskRef : null}
                       onClick={() => isHost && onSelectTask(index)}
                       className={`p-3 rounded-2xl transition-all ${
                         isActive
