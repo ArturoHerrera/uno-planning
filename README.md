@@ -118,20 +118,6 @@ Visit [http://localhost:3000](http://localhost:3000) to preview the complete pro
 
 ---
 
-## ☁️ Deployment
-
-### Render.com ($0.00 / Free Web Service)
-This repository is pre-configured with a [`render.yaml`](./render.yaml) specification:
-1. Connect your repository in [Render.com](https://render.com).
-2. Create a new **Web Service** with:
-   - **Environment**: `Node`
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
-   - **Plan**: `Free`
-3. Enjoy your free HTTPS/WSS-enabled poker planning instance!
-
----
-
 ## 📄 License
 
 This project is open source and available under the [MIT License](LICENSE).
