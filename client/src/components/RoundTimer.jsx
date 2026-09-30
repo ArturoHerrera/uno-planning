@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Clock } from 'lucide-react';
-import { playSoftTick, playZenChime, isSoundMuted, setSoundMuted } from '../utils/sound';
+import {
+  playSoftTick,
+  playZenChime,
+  playTimerStart,
+  playTimerMidpoint,
+  isSoundMuted,
+  setSoundMuted
+} from '../utils/sound';
 
 export const RoundTimer = ({
   timer,
@@ -15,8 +22,13 @@ export const RoundTimer = ({
   const [muted, setMuted] = useState(() => isSoundMuted());
   const [timeLeft, setTimeLeft] = useState(60);
   const [selectedDuration, setSelectedDuration] = useState(timer?.duration || 60);
+
+  // Referencias para controlar la reproducción única de hitos por ciclo de temporizador
   const chimePlayedRef = useRef(false);
-  const lastTickSecondRef = useRef(null);
+  const startPlayedRef = useRef(false);
+  const midpointPlayedRef = useRef(false);
+  const lastCountTickRef = useRef(null);
+  const endsAtRef = useRef(timer?.endsAt);
 
   // Sincronizar duración seleccionada si el timer cambia en el servidor
   useEffect(() => {
@@ -25,7 +37,18 @@ export const RoundTimer = ({
     }
   }, [timer?.duration]);
 
-  // Cálculo del tiempo restante y disparo de efectos sonoros
+  // Resetear banderas de hitos cuando cambia el endsAt (inicio o reinicio)
+  useEffect(() => {
+    if (timer?.endsAt !== endsAtRef.current) {
+      endsAtRef.current = timer?.endsAt;
+      startPlayedRef.current = false;
+      midpointPlayedRef.current = false;
+      lastCountTickRef.current = null;
+      chimePlayedRef.current = false;
+    }
+  }, [timer?.endsAt]);
+
+  // Cálculo del tiempo restante y disparo de efectos sonoros por hitos
   useEffect(() => {
     if (!timer) return;
 
@@ -50,25 +73,29 @@ export const RoundTimer = ({
 
       setTimeLeft(remaining);
 
-      // Sonido de tic continuo cada segundo con rampa de volumen en el último 25%
-      if (remaining > 0 && remaining !== lastTickSecondRef.current) {
-        lastTickSecondRef.current = remaining;
+      const total = timer.duration || selectedDuration || 60;
+      const midpoint = Math.floor(total / 2);
 
-        const total = timer.duration || selectedDuration || 60;
-        const ratio = remaining / total;
-
-        // Si está en el 25% final, escalar intensidad de 0.25 a 1.0; en el 75% inicial se mantiene en 0.25 sutil
-        let intensity = 0.25;
-        if (ratio <= 0.25) {
-          // ratio va de 0.25 -> 0, por lo que progressInFinal va de 0.0 -> 1.0
-          const progressInFinal = 1 - (ratio / 0.25);
-          intensity = 0.25 + (0.75 * progressInFinal);
-        }
-
-        playSoftTick(intensity);
+      // 1. Hito de inicio (solo al comenzar desde el principio de la ronda)
+      if (!startPlayedRef.current && remaining >= total - 1) {
+        startPlayedRef.current = true;
+        playTimerStart();
       }
 
-      // Chime relajante zen al llegar a cero
+      // 2. Hito del 50% de la duración (campanita suave)
+      if (!midpointPlayedRef.current && remaining <= midpoint && remaining > midpoint - 2) {
+        midpointPlayedRef.current = true;
+        playTimerMidpoint();
+      }
+
+      // 3. Cuenta regresiva suave en los últimos 5 segundos (5, 4, 3, 2, 1)
+      if (remaining <= 5 && remaining > 0 && remaining !== lastCountTickRef.current) {
+        lastCountTickRef.current = remaining;
+        const countdownIntensity = 0.4 + (0.6 * ((5 - remaining) / 4));
+        playSoftTick(countdownIntensity);
+      }
+
+      // 4. Chime zen armónico al expirar el tiempo (00:00)
       if (remaining === 0 && !chimePlayedRef.current) {
         chimePlayedRef.current = true;
         playZenChime();
@@ -77,6 +104,7 @@ export const RoundTimer = ({
 
     return () => clearInterval(interval);
   }, [timer, selectedDuration, isRevealed]);
+
 
   const handleToggleMute = () => {
     const next = !muted;
