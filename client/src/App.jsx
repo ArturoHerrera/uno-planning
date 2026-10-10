@@ -256,6 +256,8 @@ export function App() {
         initialRoomCode={currentRoomId}
         onCreateRoom={handleCreateRoom}
         onJoinRoom={handleJoinRoom}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
     );
   }

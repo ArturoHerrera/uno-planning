@@ -186,11 +186,11 @@ async function runE2ETest() {
   }
 
   // 11. Prueba de Mecánica de Pregunta ('?') y Pausa de Temporizador
-  hostSocket.emit('round:reset');
+  hostSocket.emit('round:reset', { hostToken: createRes.hostToken });
   await new Promise((r) => setTimeout(r, 100));
 
   // Iniciar temporizador de 60 segundos
-  hostSocket.emit('timer:start', { duration: 60 });
+  hostSocket.emit('timer:start', { duration: 60, hostToken: createRes.hostToken });
   await new Promise((r) => setTimeout(r, 150));
 
   // Votante emite '?'
@@ -222,7 +222,7 @@ async function runE2ETest() {
     });
   });
 
-  hostSocket.emit('question:resolve', { action: 'continue' });
+  hostSocket.emit('question:resolve', { action: 'continue', hostToken: createRes.hostToken });
   const resolvedState = await questionResolvedPromise;
   console.log('✓ Duda resuelta con éxito, temporizador reanudado:', {
     timerRunning: resolvedState.timer.isRunning,
