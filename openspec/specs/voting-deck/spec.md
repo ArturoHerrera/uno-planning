@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define la baraja de estimación basada en la sucesión de Fibonacci con estética vectorial inspirada en el juego de cartas UNO, colores aleatorios y modos de participación.
+Define la baraja de estimación basada en la sucesión de Fibonacci con estética vectorial inspirada en el juego de cartas UNO, colores aleatorios, retroalimentación táctil y modos de participación.
 
 ## Requirements
 
@@ -18,11 +18,15 @@ El sistema SHALL presentar una baraja de estimación compuesta por los valores `
 - **THEN** las cartas numéricas reciben cíclicamente los colores base de UNO siguiendo la secuencia fija: azul (`#0054A6`), verde (`#54B948`), amarillo (`#FFDE00`) y rojo (`#ED1C24`), repitiendo dicho orden para los números subsecuentes en lugar de asignarse aleatoriamente, mientras que las cartas comodín (`?` y `☕`) conservan su presentación especial/wild
 
 ### Requirement: Emisión y cambio de voto
-El sistema SHALL permitir al participante seleccionar una carta para emitir su voto o cambiar su selección antes de que la ronda sea revelada.
+El sistema SHALL permitir al participante seleccionar una carta para emitir su voto o cambiar su selección antes de que la ronda sea revelada, emitiendo retroalimentación sonora sutil de colocación de carta (*card snap*) y distinguiendo visualmente en la mesa entre participantes que están listos y aquellos que aún están pensando.
 
-#### Scenario: Selección de carta
+#### Scenario: Selección de carta y retroalimentación táctil/sonora
 - **WHEN** un participante hace clic en una carta de su mano
-- **THEN** la carta queda marcada como seleccionada en su interfaz y el resto de los participantes observan en la mesa que el usuario ya votó, sin mostrar el valor
+- **THEN** la carta queda marcada como seleccionada en su interfaz, se reproduce un sonido sutil de carta colocada sobre la mesa, y el resto de los participantes observan en la mesa la carta boca abajo con un distintivo prominente de "Listo"
+
+#### Scenario: Participante en espera de emitir su voto
+- **WHEN** un participante activo aún no ha seleccionado carta durante una ronda abierta
+- **THEN** su lugar en la mesa exhibe una ranura vacía con la indicación animada "Pensando...", permitiendo al resto del equipo identificarlo y reaccionar con emojis
 
 ### Requirement: Modo Espectador (No votar)
 El sistema SHALL permitir a cualquier participante declararse como espectador en cualquier momento de la sesión.

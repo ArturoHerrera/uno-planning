@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti';
 import { Award, Flame, Users, RotateCcw, ArrowRight, Check } from 'lucide-react';
 import { FIBONACCI_VALUES } from '../utils/deck';
 import { getAvatarUrl } from '../utils/avatar';
+import { playUnoSuccessFanfare } from '../utils/sound';
 
 export const ResultsModal = ({
   isOpen,
@@ -27,8 +28,16 @@ export const ResultsModal = ({
   React.useEffect(() => {
     if (isOpen) {
       setSelectedScore(getSuggestion());
+      if (metrics?.isConsensus && metrics?.voteCount > 0) {
+        playUnoSuccessFanfare();
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
     }
-  }, [isOpen, getSuggestion]);
+  }, [isOpen, getSuggestion, metrics?.isConsensus, metrics?.voteCount]);
 
   if (!isOpen || !roomState?.revealed) return null;
 
@@ -59,12 +68,23 @@ export const ResultsModal = ({
         {(!metrics || metrics.voteCount === 0) && (
           <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-300 text-xs text-center font-medium flex items-center justify-center gap-2">
             <span>⚠️</span>
-            <span>No se registraron votos numéricos en esta ronda. Puedes reiniciar la votación o fijar una estimación manual.</span>
+            <span>Mesa indecisa: Nadie arriesgó una carta. Puedes reiniciar la votación o fijar una estimación manual.</span>
+          </div>
+        )}
+
+        {/* Celebración de Consenso ¡UNO! */}
+        {metrics?.isConsensus && metrics?.voteCount > 0 && (
+          <div className="mb-5 p-3.5 bg-gradient-to-r from-red-600/20 via-amber-500/20 to-emerald-600/20 border border-amber-500/50 rounded-2xl text-center flex items-center justify-center gap-2 shadow-lg animate-pulse">
+            <span className="text-xl">🎉</span>
+            <span className="text-sm font-black text-amber-300 uppercase tracking-wider">
+              ¡UNO! Consenso Total ({metrics.mode} pts)
+            </span>
+            <span className="text-xl">🏆</span>
           </div>
         )}
 
         {/* Panel de Estadísticas / Consenso */}
-        <div className="grid grid-cols-3 gap-3 bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4 mb-6 text-center">
+        <div className="grid grid-cols-3 gap-3 bg-white/[0.04] border border-white/[0.08] rounded-2xl p-4 mb-5 text-center">
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
               Promedio
@@ -89,9 +109,9 @@ export const ResultsModal = ({
               Acuerdo
             </div>
             {metrics?.isConsensus ? (
-              <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-extrabold animate-pulse">
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-extrabold">
                 <Award className="w-3 h-3" />
-                <span>¡Consenso!</span>
+                <span>¡UNO!</span>
               </div>
             ) : (
               <div className="text-xs font-semibold text-slate-400 pt-1">
@@ -100,6 +120,39 @@ export const ResultsModal = ({
             )}
           </div>
         </div>
+
+        {/* Sección de Discrepancias / Outliers para debate ágil */}
+        {!metrics?.isConsensus && metrics?.minScore && metrics?.maxScore && metrics.minScore.value !== metrics.maxScore.value && (
+          <div className="mb-5 p-3.5 bg-white/[0.03] border border-amber-500/30 rounded-2xl">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-amber-400 mb-2 flex items-center justify-between">
+              <span>Debate Scrum • Discrepancias</span>
+              <span className="text-[10px] text-slate-400 font-normal">Contraste de estimación</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {/* Más bajo */}
+              <div className="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <div className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Puntaje más bajo</span>
+                  <span className="font-mono font-black text-sm">{metrics.minScore.value} pts</span>
+                </div>
+                <div className="text-slate-300 truncate text-[11px]">
+                  {metrics.minScore.voters.join(', ')}
+                </div>
+              </div>
+
+              {/* Más alto */}
+              <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <div className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>Puntaje más alto</span>
+                  <span className="font-mono font-black text-sm">{metrics.maxScore.value} pts</span>
+                </div>
+                <div className="text-slate-300 truncate text-[11px]">
+                  {metrics.maxScore.voters.join(', ')}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Desglose de votos de participantes */}
         <div className="mb-6">
@@ -161,7 +214,7 @@ export const ResultsModal = ({
                 className="w-full sm:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-                <span>Votar de nuevo esta tarea</span>
+                <span>Barajar de nuevo esta historia</span>
               </button>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -170,7 +223,7 @@ export const ResultsModal = ({
                   className="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
-                  <span>Guardar y Siguiente</span>
+                  <span>Guardar y Siguiente Mano</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>

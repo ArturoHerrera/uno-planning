@@ -244,6 +244,11 @@ export function App() {
     socket.emit('timer:reset', { duration, hostToken: getHostToken() });
   };
 
+  // 11. Resolver duda de participante ('continue' | 'reset')
+  const handleResolveQuestion = (action) => {
+    socket.emit('question:resolve', { action, hostToken: getHostToken() });
+  };
+
   if (!roomState) {
     return (
       <Lobby
@@ -276,6 +281,7 @@ export function App() {
       onStartTimer={handleStartTimer}
       onPauseTimer={handlePauseTimer}
       onResetTimer={handleResetTimer}
+      onResolveQuestion={handleResolveQuestion}
     />
   );
 }
