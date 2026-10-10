@@ -3,10 +3,13 @@ import { UnoCard } from './UnoCard';
 import { FlipCard } from './FlipCard';
 import { TaskModal } from './TaskModal';
 import { ResultsModal } from './ResultsModal';
+import { QuestionModal } from './QuestionModal';
+import { HostTutorial } from './HostTutorial';
 import { ProjectilesOverlay } from './ProjectilesOverlay';
 import { RoundTimer } from './RoundTimer';
 import { generateRandomDeck } from '../utils/deck';
 import { getAvatarUrl } from '../utils/avatar';
+import { playCardSnap } from '../utils/sound';
 import {
   Copy,
   Check,
@@ -43,12 +46,21 @@ export const Room = ({
   onLeaveRoom,
   onStartTimer,
   onPauseTimer,
-  onResetTimer
+  onResetTimer,
+  onResolveQuestion
 }) => {
   const [deck, setDeck] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isTutorialActive, setIsTutorialActive] = useState(() => {
+    // Activar tutorial solo si el usuario no lo ha completado y está habilitado en localStorage
+    const completed = localStorage.getItem('poker_host_tutorial_completed');
+    const enabled = localStorage.getItem('poker_host_tutorial_enabled');
+    if (completed === 'true') return false;
+    if (enabled !== null) return enabled === 'true';
+    return true;
+  });
   const activeTaskRef = useRef(null);
 
   useEffect(() => {
@@ -79,6 +91,9 @@ export const Room = ({
     if (roomState?.revealed || isSpectator) return;
     const nextVal = selectedCard === val ? null : val;
     setSelectedCard(nextVal);
+    if (nextVal !== null) {
+      playCardSnap();
+    }
     onVote(nextVal);
   };
 
@@ -132,7 +147,7 @@ export const Room = ({
         </div>
 
         {/* 2. Temporizador Central Sincronizado */}
-        <div className="flex-1 max-w-fit mx-2 hidden md:block">
+        <div id="tutorial-timer" className="flex-1 max-w-fit mx-2 hidden md:block">
           <RoundTimer
             timer={roomState?.timer}
             isHost={isHost}
@@ -319,13 +334,14 @@ export const Room = ({
                   <div className="pt-1">
                     {!roomState?.revealed ? (
                       <button
+                        id="tutorial-reveal-btn"
                         onClick={onReveal}
                         disabled={!hasAnyVote}
                         className="btn-uno-reveal px-7 py-3 rounded-full font-black text-sm tracking-wider uppercase flex items-center gap-2 cursor-pointer"
-                        title={!hasAnyVote ? 'Se requiere al menos 1 voto para revelar' : 'Revelar votos de la sala'}
+                        title={!hasAnyVote ? 'Se requiere al menos 1 voto para bajar cartas' : 'Bajar cartas y mostrar resultados'}
                       >
                         <Sparkles className="w-4 h-4 fill-amber-300" />
-                        <span>¡REVELAR VOTOS!</span>
+                        <span>¡BAJAR CARTAS!</span>
                       </button>
                     ) : (
                       <button
@@ -335,7 +351,7 @@ export const Room = ({
                         }`}
                       >
                         <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Nueva Estimación</span>
+                        <span>Siguiente Mano</span>
                       </button>
                     )}
                   </div>
@@ -382,14 +398,14 @@ export const Room = ({
           </div>
         </div>
 
-        {/* COLUMNA LATERAL (2/7): Backlog de Tareas */}
-        <aside className={`lg:col-span-2 ${isDark ? 'bg-white/[0.03]' : 'bg-white/80'} backdrop-blur-xl rounded-3xl p-5 shadow-2xl flex flex-col justify-between`}>
+        {/* COLUMNA LATERAL (2/7): Mazo de Historias */}
+        <aside id="tutorial-task-queue" className={`lg:col-span-2 ${isDark ? 'bg-white/[0.03]' : 'bg-white/80'} backdrop-blur-xl rounded-3xl p-5 shadow-2xl flex flex-col justify-between`}>
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <ListOrdered className="w-4 h-4 text-blue-500" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Cola de Tareas ({totalTasks})
+                  Mazo de Historias ({totalTasks})
                 </h3>
               </div>
 
@@ -406,7 +422,7 @@ export const Room = ({
 
             {totalTasks === 0 ? (
               <div className="text-center py-12 px-4 text-slate-400 text-xs">
-                <p>No hay tareas en cola.</p>
+                <p>No hay historias en cola.</p>
                 {isHost && (
                   <button
                     onClick={() => setIsTaskModalOpen(true)}
@@ -498,7 +514,7 @@ export const Room = ({
       <footer className="w-full max-w-6xl mx-auto px-4 mt-2 z-20">
         <div className="flex items-center justify-between mb-1.5 px-2">
           <div className="text-xs uppercase font-bold tracking-wider text-slate-400 flex items-center gap-2">
-            <span>Tu Mano Fibonacci</span>
+            <span>Tu Mano</span>
             {selectedCard !== null && (
               <span className="text-amber-500 font-semibold">
                 (Carta: <strong className="font-black text-amber-500 text-sm">{selectedCard}</strong>)
@@ -556,6 +572,24 @@ export const Room = ({
         onSaveScore={onSaveScore}
         onResetRound={onResetRound}
       />
+
+      {/* Modal prioritario ante carta de duda ('?') */}
+      <QuestionModal
+        activeQuestion={roomState?.activeQuestion}
+        isHost={isHost}
+        onResolveQuestion={onResolveQuestion}
+      />
+
+      {/* Onboarding guiado Spotlight para el anfitrión */}
+      {isHost && (
+        <HostTutorial
+          isActive={isTutorialActive}
+          onComplete={() => {
+            setIsTutorialActive(false);
+            localStorage.setItem('poker_host_tutorial_completed', 'true');
+          }}
+        />
+      )}
 
       {/* Capa global de lluvia balística de proyectiles */}
       <ProjectilesOverlay />

@@ -15,7 +15,22 @@ export const Lobby = ({
     return localStorage.getItem('poker_avatar_seed') || getRandomAvatar();
   });
   const [isSpectator, setIsSpectator] = useState(false);
+  const [enableHostTutorial, setEnableHostTutorial] = useState(() => {
+    // Si ya lo completó o lo apagó, por defecto está inactivo
+    const completed = localStorage.getItem('poker_host_tutorial_completed');
+    const pref = localStorage.getItem('poker_host_tutorial_enabled');
+    if (pref !== null) return pref === 'true';
+    return completed !== 'true';
+  });
   const [error, setError] = useState('');
+
+  const handleToggleTutorial = (checked) => {
+    setEnableHostTutorial(checked);
+    localStorage.setItem('poker_host_tutorial_enabled', checked ? 'true' : 'false');
+    if (checked) {
+      localStorage.removeItem('poker_host_tutorial_completed');
+    }
+  };
 
   const handleRandomizeAvatar = () => {
     const newSeed = getRandomAvatar();
@@ -184,7 +199,7 @@ export const Lobby = ({
         </div>
 
         {/* Toggle Espectador */}
-        <div className="mb-6 flex items-center justify-between p-3.5 bg-slate-800/40 border border-slate-800 rounded-2xl">
+        <div className="mb-4 flex items-center justify-between p-3.5 bg-slate-800/40 border border-slate-800 rounded-2xl">
           <div>
             <div className="text-sm font-semibold text-slate-200">Modo Espectador</div>
             <div className="text-xs text-slate-400">Observa sin votar ni afectar promedios</div>
@@ -194,6 +209,26 @@ export const Lobby = ({
               type="checkbox"
               checked={isSpectator}
               onChange={(e) => setIsSpectator(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+          </label>
+        </div>
+
+        {/* Toggle Tutorial de Anfitrión */}
+        <div className="mb-6 flex items-center justify-between p-3.5 bg-slate-800/40 border border-slate-800 rounded-2xl">
+          <div>
+            <div className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
+              <span>Tutorial de Anfitrión</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">Scrum Master</span>
+            </div>
+            <div className="text-xs text-slate-400">Guía rápida de 3 pasos con foco visual al crear sala</div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={enableHostTutorial}
+              onChange={(e) => handleToggleTutorial(e.target.checked)}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>

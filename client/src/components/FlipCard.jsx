@@ -128,18 +128,18 @@ export const FlipCard = ({
             {/* Dorso (Boca abajo mientras no se revela o mientras votan) */}
             <div className="absolute inset-0 backface-hidden flex items-center justify-center">
               {hasVoted ? (
-                <div className="relative">
-                  <UnoCard isBack size="sm" />
-                  <div className="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full p-1 shadow-md border-2 border-slate-900">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
+                <div className="relative group/card transform transition-all duration-300 scale-100 hover:scale-105">
+                  <UnoCard isBack size="sm" className="shadow-lg shadow-black/40 ring-1 ring-emerald-500/40 rounded-2xl" />
+                  {/* Badge prominente 'Listo' */}
+                  <div className="absolute -top-2.5 -right-2 bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg border border-emerald-300/40 flex items-center gap-1 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                    <span>Listo</span>
                   </div>
                 </div>
               ) : (
                 <div className="w-[84px] h-[126px] rounded-2xl border-2 border-dashed border-slate-700/80 bg-slate-900/60 flex flex-col items-center justify-center text-slate-500 gap-1.5 shadow-inner">
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400/60 animate-ping" />
-                  <span className="text-[11px] font-medium text-slate-400">Pensando...</span>
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80 animate-ping" />
+                  <span className="text-[11px] font-bold text-slate-400 tracking-wide">Pensando...</span>
                 </div>
               )}
             </div>

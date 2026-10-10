@@ -185,6 +185,77 @@ async function runE2ETest() {
     throw new Error('Fallo en la auto-revelación obligatoria al expirar el temporizador');
   }
 
+  // 11. Prueba de Mecánica de Pregunta ('?') y Pausa de Temporizador
+  hostSocket.emit('round:reset');
+  await new Promise((r) => setTimeout(r, 100));
+
+  // Iniciar temporizador de 60 segundos
+  hostSocket.emit('timer:start', { duration: 60 });
+  await new Promise((r) => setTimeout(r, 150));
+
+  // Votante emite '?'
+  const questionRaisedPromise = new Promise((resolve) => {
+    voterSocket.on('room:updated', (state) => {
+      if (state.activeQuestion && !state.timer.isRunning) {
+        resolve(state);
+      }
+    });
+  });
+
+  voterSocket.emit('vote:cast', { value: '?' });
+  const questionState = await questionRaisedPromise;
+  console.log('✓ Carta ? pausó el temporizador exitosamente:', {
+    activeQuestion: questionState.activeQuestion,
+    timerRunning: questionState.timer.isRunning
+  });
+
+  if (!questionState.activeQuestion || questionState.timer.isRunning) {
+    throw new Error('Fallo: La carta ? no activó activeQuestion ni pausó el temporizador');
+  }
+
+  // Host resuelve pregunta con 'continue'
+  const questionResolvedPromise = new Promise((resolve) => {
+    voterSocket.on('room:updated', (state) => {
+      if (!state.activeQuestion && state.timer.isRunning) {
+        resolve(state);
+      }
+    });
+  });
+
+  hostSocket.emit('question:resolve', { action: 'continue' });
+  const resolvedState = await questionResolvedPromise;
+  console.log('✓ Duda resuelta con éxito, temporizador reanudado:', {
+    timerRunning: resolvedState.timer.isRunning,
+    remainingSeconds: resolvedState.timer.remainingSeconds
+  });
+
+  // 12. Prueba de Outliers con votos discrepantes
+  hostSocket.emit('round:reset');
+  await new Promise((r) => setTimeout(r, 100));
+
+  hostSocket.emit('vote:cast', { value: 2 });
+  voterSocket.emit('vote:cast', { value: 13 });
+  await new Promise((r) => setTimeout(r, 100));
+
+  const outlierRevealPromise = new Promise((resolve) => {
+    voterSocket.on('room:updated', (state) => {
+      if (state.revealed && state.metrics && state.metrics.minScore && state.metrics.maxScore) {
+        resolve(state);
+      }
+    });
+  });
+  hostSocket.emit('round:reveal');
+  const outlierState = await outlierRevealPromise;
+  console.log('✓ Detección de Outliers (Mín vs Máx) verificada:', {
+    isConsensus: outlierState.metrics.isConsensus,
+    minScore: outlierState.metrics.minScore,
+    maxScore: outlierState.metrics.maxScore
+  });
+
+  if (outlierState.metrics.isConsensus || outlierState.metrics.minScore.value !== 2 || outlierState.metrics.maxScore.value !== 13) {
+    throw new Error('Fallo en la computación de outliers');
+  }
+
   // Desconectar clientes
   hostSocket.disconnect();
   voterSocket.disconnect();

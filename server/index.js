@@ -123,8 +123,9 @@ function getRoomPublicState(roomId) {
   // Calcular métricas si está revelado
   let metrics = null;
   if (room.revealed) {
-    const numericVotes = participantsList
-      .filter(p => !p.isSpectator && p.vote !== null && typeof p.vote === 'number' && Number.isFinite(p.vote));
+    const activeNonSpectators = participantsList.filter(p => !p.isSpectator);
+    const numericVotes = activeNonSpectators
+      .filter(p => p.vote !== null && typeof p.vote === 'number' && Number.isFinite(p.vote));
 
     if (numericVotes.length > 0) {
       const sum = numericVotes.reduce((acc, curr) => acc + curr.vote, 0);
@@ -142,20 +143,44 @@ function getRoomPublicState(roomId) {
         }
       });
 
-      const isConsensus = numericVotes.length > 1 && numericVotes.every(p => p.vote === numericVotes[0].vote);
+      // Consenso total: todos los votantes activos no espectadores votaron el mismo número
+      const isConsensus = activeNonSpectators.length > 1 &&
+        numericVotes.length === activeNonSpectators.length &&
+        numericVotes.every(p => p.vote === numericVotes[0].vote);
+
+      // Calcular outliers (Puntaje más bajo y más alto con votantes)
+      let minVal = Infinity;
+      let maxVal = -Infinity;
+      numericVotes.forEach(p => {
+        if (p.vote < minVal) minVal = p.vote;
+        if (p.vote > maxVal) maxVal = p.vote;
+      });
+
+      const minScore = {
+        value: minVal,
+        voters: numericVotes.filter(p => p.vote === minVal).map(p => p.name)
+      };
+      const maxScore = {
+        value: maxVal,
+        voters: numericVotes.filter(p => p.vote === maxVal).map(p => p.name)
+      };
 
       metrics = {
         average: avg,
         mode: mode,
         isConsensus,
-        voteCount: numericVotes.length
+        voteCount: numericVotes.length,
+        minScore,
+        maxScore
       };
     } else {
       metrics = {
         average: null,
         mode: null,
         isConsensus: false,
-        voteCount: 0
+        voteCount: 0,
+        minScore: null,
+        maxScore: null
       };
     }
   }
@@ -168,6 +193,7 @@ function getRoomPublicState(roomId) {
     revealed: room.revealed,
     participants: participantsList,
     metrics,
+    activeQuestion: room.activeQuestion || null,
     timer: room.timer || { duration: 60, endsAt: null, isRunning: false, remainingSeconds: 60 }
   };
 }
@@ -313,9 +339,73 @@ io.on('connection', (socket) => {
     const participant = room.participants.get(socket.id);
     if (participant && !participant.isSpectator) {
       participant.vote = value;
+
+      // Mecánica lúdica de duda: si vota '?' y no hay pregunta activa, pausar el temporizador
+      if (value === '?' && !room.activeQuestion) {
+        let pausedRemaining = room.timer?.remainingSeconds || 60;
+        if (room.timer?.isRunning && room.timer?.endsAt) {
+          clearRoomTimer(room);
+          pausedRemaining = Math.max(1, Math.ceil((room.timer.endsAt - Date.now()) / 1000));
+          room.timer.isRunning = false;
+          room.timer.endsAt = null;
+          room.timer.remainingSeconds = pausedRemaining;
+        }
+
+        room.activeQuestion = {
+          userId: socket.id,
+          userName: participant.name,
+          pausedRemaining
+        };
+      }
+
       room.lastActivity = Date.now();
       io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
     }
+  });
+
+  // Resolver duda / pregunta ('continue' o 'reset')
+  socket.on('question:resolve', ({ action, hostToken } = {}) => {
+    if (!currentRoomId) return;
+    const room = rooms.get(currentRoomId);
+    if (!room || !isHostAuthorized(room, socket, hostToken)) return;
+
+    if (!room.activeQuestion) return;
+
+    const remainingToUse = room.activeQuestion.pausedRemaining || 60;
+    room.activeQuestion = null;
+
+    if (action === 'reset') {
+      // Reiniciar temporizador al valor inicial
+      clearRoomTimer(room);
+      if (room.timer) {
+        room.timer.endsAt = null;
+        room.timer.isRunning = false;
+        room.timer.remainingSeconds = room.timer.duration || 60;
+      }
+    } else {
+      // Continuar temporizador desde los segundos que quedaban
+      if (room.timer && remainingToUse > 0) {
+        room.timer.endsAt = Date.now() + remainingToUse * 1000;
+        room.timer.isRunning = true;
+        room.timer.remainingSeconds = remainingToUse;
+
+        clearRoomTimer(room);
+        room.timerTimeout = setTimeout(() => {
+          const activeRoom = rooms.get(currentRoomId);
+          if (activeRoom && activeRoom.timer && activeRoom.timer.isRunning) {
+            activeRoom.revealed = true;
+            activeRoom.timer.isRunning = false;
+            activeRoom.timer.endsAt = null;
+            activeRoom.timer.remainingSeconds = 0;
+            clearRoomTimer(activeRoom);
+            io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
+          }
+        }, remainingToUse * 1000);
+      }
+    }
+
+    room.lastActivity = Date.now();
+    io.to(currentRoomId).emit('room:updated', getRoomPublicState(currentRoomId));
   });
 
   // 4. Cambiar rol espectador/votante
@@ -357,6 +447,7 @@ io.on('connection', (socket) => {
 
     clearRoomTimer(room);
     room.revealed = false;
+    room.activeQuestion = null;
     room.participants.forEach(p => {
       p.vote = null;
     });
